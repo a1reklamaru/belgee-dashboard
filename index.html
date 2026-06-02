@@ -428,7 +428,7 @@
       .kpi { min-height: 78px; padding: 10px; }
       .kpi strong { font-size: 21px; }
       .kpi small { font-size: 11px; }
-      .chart-wrap { height: 190px; min-height: 190px; }
+      .chart-wrap { height: 220px; min-height: 220px; }
       th, td { padding: 8px; }
       .campaign-month-head,
       .campaign-toggle { padding: 9px 10px; }
@@ -852,14 +852,18 @@ window.DASHBOARD_CSV = "\"Белджи Нижневартовск: данные 
       canvas.height = Math.round(rect.height * scale);
       const ctx = canvas.getContext('2d');
       ctx.scale(scale, scale);
-      return { canvas, ctx, width: rect.width, height: rect.height, pad: { top: 16, right: 16, bottom: 34, left: 52 } };
+      const isMobile = rect.width < 430;
+      const pad = isMobile
+        ? { top: 14, right: 10, bottom: 48, left: 46 }
+        : { top: 16, right: 16, bottom: 34, left: 52 };
+      return { canvas, ctx, width: rect.width, height: rect.height, pad, isMobile };
     }
 
     function drawGrid(ctx, w, h, pad, max) {
       ctx.clearRect(0, 0, w, h);
       ctx.strokeStyle = '#e8edf4';
       ctx.fillStyle = '#657184';
-      ctx.font = '12px Segoe UI, Arial';
+      ctx.font = `${pad.bottom > 40 ? 11 : 12}px Segoe UI, Arial`;
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       for (let i = 0; i <= 4; i++) {
@@ -869,7 +873,7 @@ window.DASHBOARD_CSV = "\"Белджи Нижневартовск: данные 
         ctx.lineTo(w - pad.right, y);
         ctx.stroke();
         const value = max * (1 - i / 4);
-        ctx.fillText(shortNumber(value), pad.left - 8, y);
+        ctx.fillText(shortNumber(value, pad.bottom > 40), pad.left - 8, y);
       }
     }
 
@@ -878,6 +882,7 @@ window.DASHBOARD_CSV = "\"Белджи Нижневартовск: данные 
       ctx.fillStyle = '#657184';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
+      ctx.font = `${pad.bottom > 40 ? 11 : 12}px Segoe UI, Arial`;
       list.forEach((item, idx) => {
         const x = pad.left + innerW * (idx + .5) / list.length;
         const label = item.label.split(' ');
@@ -1016,10 +1021,20 @@ window.DASHBOARD_CSV = "\"Белджи Нижневартовск: данные 
       return byColumn || bestScore < 28 ? best : null;
     }
 
-    function shortNumber(value) {
-      if (value >= 1000000) return `${fmtPct.format(value / 1000000)} млн`;
-      if (value >= 1000) return `${fmtPct.format(value / 1000)} тыс`;
+    function shortNumber(value, compact = false) {
+      if (compact) {
+        if (value >= 1000000) return `${formatAxis(value / 1000000)}м`;
+        if (value >= 1000) return `${formatAxis(value / 1000)}к`;
+      }
+      if (value >= 1000000) return `${formatAxis(value / 1000000)} млн`;
+      if (value >= 1000) return `${formatAxis(value / 1000)} тыс`;
       return fmtInt.format(value);
+    }
+
+    function formatAxis(value) {
+      return new Intl.NumberFormat('ru-RU', {
+        maximumFractionDigits: value >= 10 ? 0 : 1
+      }).format(value);
     }
 
     window.addEventListener('resize', () => render());
