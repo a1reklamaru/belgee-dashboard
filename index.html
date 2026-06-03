@@ -567,7 +567,7 @@ window.DASHBOARD_CSV = "\"Белджи Нижневартовск: данные 
       rows.slice(1).forEach((row) => {
         const type = clean(row[0]);
         const monthName = clean(row[1]);
-        if (!monthName) return;
+        if (!isValidRowType(type) || !isValidMonthName(monthName)) return;
         if (!byMonth.has(monthName)) {
           byMonth.set(monthName, {
             month: monthName,
